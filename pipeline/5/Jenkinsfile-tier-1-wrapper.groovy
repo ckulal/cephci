@@ -9,9 +9,10 @@ def sharedLib
 def test_results = [:]
 def composeInfo = ""
 def tier1Jobs = [
-                    "rhceph-5-tier-1-deploy",
-                    "rhceph-5-tier-1-object",
-                    "rhceph-5-tier-1-rbd"
+//                     "rhceph-5-tier-1-deploy",
+//                     "rhceph-5-tier-1-object",
+//                     "rhceph-5-tier-1-rbd",
+                    "rhceph-5-tier-1-cephfs"
                 ]
 
 // Pipeline script entry point
@@ -21,7 +22,7 @@ node(nodeName) {
 		stage('Install prereq') {
 		    checkout([
 		        $class: 'GitSCM',
-		        branches: [[name: '*/master']],
+		        branches: [[name: 'refs/remotes/origin/teir_1_cephfs']],
 		        doGenerateSubmoduleConfigurations: false,
 		        extensions: [[
 		            $class: 'SubmoduleOption',
