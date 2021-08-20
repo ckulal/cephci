@@ -4,6 +4,7 @@
 */
 
 import groovy.json.JsonSlurper
+import org.jsoup.Jsoup
 
 def jsonToMap(def jsonFile) {
     /*
