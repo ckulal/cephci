@@ -54,9 +54,9 @@ def fetchMajorMinorOSVersion(def build_type){
         platform = cimsg.artifact.brew_build_target.substring(9,15).toLowerCase()
     }
     if (build_type == 'rc-compose'){
-        major_ver = cimsg.compose-id.substring(7,8)
-        minor_ver = cimsg.compose-id.substring(9,10)
-        platform = cimsg.compose-id.substring(11,17).toLowerCase()
+        major_ver = cimsg["compose-id"].substring(7,8)
+        minor_ver = cimsg["compose-id"].substring(9,10)
+        platform = cimsg["compose-id"].substring(11,17).toLowerCase()
     }
     if (build_type == 'rc-osbs'){
         major_ver = cimsg.tag.name.substring(5,6)
