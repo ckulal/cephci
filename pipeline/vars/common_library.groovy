@@ -11,7 +11,7 @@ def jsonToMap(def jsonFile) {
         Read the JSON file and returns a map object
     */
     def FileExists = sh (returnStatus: true, script: "ls -l ${jsonFile}")
-    if (tier0FileExists != 0) {
+    if (FileExists != 0) {
         println "File {jsonFile} does not exist."
         return [:]
     }
@@ -72,6 +72,9 @@ def fetchMajorMinorOSVersion(def build_type){
 }
 
 def fetchCephVersion(def base_url){
+    /*
+        Fetches ceph version using compose base url
+    */
     base_url += "/compose/Tools/x86_64/os/Packages/"
     println base_url
     def document = Jsoup.connect(base_url).get().toString()
@@ -83,15 +86,36 @@ def fetchCephVersion(def base_url){
     return ceph_ver[0]
 }
 
-def WriteToReleaseYaml(def major_ver, def minor_ver, def content,def lock=true){
-    lock_file_path = ${env.HOME}/lockfile.lock
-    if (! ${env.HOME}/RHCEPH-${major_ver}.${minor}.yaml){
-        sh(returnStatus: true, script: "touch ${env.HOME}/RHCEPH-${major_ver}.${minor}.yaml")
+def setLock(def major_ver, def minor_ver){
+    /*
+        create a lock file
+    */
+    def defaultFileDir = "/ceph/cephci-jenkins/latest-rhceph-container-info"
+    def lock_file = "${defaultFileDir}/RHCEPH-${major_ver}.${minor_ver}.lock"
+    def lockFileExists = sh (returnStatus: true, script: "ls -l ${lock_file}")
+    if (lockFileExists != 0) {
+        println "RHCEPH-${major_ver}.${minor_ver}.lock does not exist."
+        sh(returnStatus: true, script: "touch ${lock_file}")
     }
-    if (! lock_file_path){
-        def fileCreated = sh(
-        returnStatus: true, script: "touch ${lock_file_path}")
-        if
-        //write the content to a file
+    else{
+        // sleeping for 10 minutes
+        sleep(600)
+        def lockFilePresent = sh (returnStatus: true, script: "ls -l ${lock_file}")
+        if (lockFilePresent == 0) {
+        error "Lock file: RHCEPH-${major_ver}.${minor_ver}.lock already exist.."
+        }
+    }
+
+}
+
+def unSetLock(def major_ver, def minor_ver){
+    /*
+        Unset a lock file
+    */
+    def defaultFileDir = "/ceph/cephci-jenkins/latest-rhceph-container-info"
+    def lock_file = "${defaultFileDir}/RHCEPH-${major_ver}.${minor_ver}.lock"
+    def lockFileExists = sh (returnStatus: true, script: "ls -l ${lock_file}")
+    if (lockFileExists == 0) {
+        sh(returnStatus: true, script: "rm -rf ${lock_file}")
     }
 }
