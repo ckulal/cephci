@@ -284,21 +284,8 @@ tests:
       module: sanity_rgw_multisite.py
       name: create non-tenanted user
   # add datalog omap tests
-
-#   - test:
-#       name: Test LC Expiration on multisite
-#       desc: Test LC Expiration on multisite
-#       polarion-id: CEPH-10737
-#       module: sanity_rgw_multisite.py
-#       clusters:
-#         ceph-sec:
-#           config:
-#             script-name:  test_bucket_lifecycle_object_expiration_transition.py
-#             config-file-name:  test_lc_rule_prefix_and_tag.yaml
-#             timeout: 300
-#             verify-io-on-site: ["ceph-pri", "ceph-sec"]
  
-   - test:
+  - test:
       name: Test LC Expiration on multisite
       desc: Test LC Expiration on multisite
       polarion-id: CEPH-10737
@@ -311,7 +298,7 @@ tests:
             timeout: 300
             verify-io-on-site: ["ceph-pri"]
             
-   - test:
+  - test:
       name: Test LC Expiration on multisite
       desc: Test LC Expiration on multisite
       polarion-id: CEPH-10737
@@ -324,7 +311,7 @@ tests:
             timeout: 300
             verify-io-on-site: ["ceph-sec"]
  
-   - test:
+  - test:
       name: Test LC Expiration on multisite
       desc: Test LC Expiration on multisite
       polarion-id: CEPH-10737
