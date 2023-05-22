@@ -116,7 +116,7 @@ tests:
       name: deploy cluster
 
   - test:
-      abort-on-fail: true
+      abort-on-fail: false
       clusters:
         ceph-pri:
           config:
