@@ -210,8 +210,21 @@ tests:
 
   #  Dynamic resharding tests
   - test:
-      name: Verify DBR feature enabled on greenfield cluster
-      desc: Check DBR feature enabled on greenfield cluster
+      name: Disable DBR feature on zonegroup
+      desc: Disable DBR feature on zonegroup
+      abort-on-fail: true
+      module: sanity_rgw_multisite.py
+      polarion-id: CEPH-83574626
+      clusters:
+        ceph-pri:
+          config:
+            script-name: test_dynamic_bucket_resharding.py
+            config-file-name: test_resharding_disable_in_zonegroup.yaml
+            verify-io-on-site: ["ceph-pri", "ceph-sec"]
+
+  - test:
+      name: Re-enable DBR feature on cluster and Verify
+      desc: Re-nable DBR feature on cluster an verify
       abort-on-fail: true
       module: sanity_rgw_multisite.py
       polarion-id: CEPH-83573596
@@ -219,17 +232,5 @@ tests:
         ceph-pri:
           config:
             script-name: test_check_sharding_enabled.py
-            config-file-name: test_check_sharding_enabled_greenfield.yaml
-            verify-io-on-site: ["ceph-pri", "ceph-sec"]
-  - test:
-      name: Disable DBR feature on zonegroup
-      desc: Disable DBR feature on zonegroup
-      abort-on-fail: true
-      module: sanity_rgw_multisite.py
-      #polarion-id: CEPH-83573596
-      clusters:
-        ceph-pri:
-          config:
-            script-name: test_dynamic_bucket_resharding.py
-            config-file-name: test_resharding_disable_in_zonegroup.yaml
+            config-file-name: test_check_sharding_enabled_brownfield.yaml
             verify-io-on-site: ["ceph-pri", "ceph-sec"]
