@@ -1812,9 +1812,9 @@ def clone_the_repo(config, node, path_to_clone):
           node and clone the repo in it.
     """
     log.info("cloning the repo")
-    branch = config.get("branch", "master")
+    branch = config.get("branch", "CEPH-83574626")
     log.info(f"branch: {branch}")
-    repo_url = config.get("git-url")
+    repo_url = "https://github.com/ckulal/ceph-qe-scripts.git"
     log.info(f"repo_url: {repo_url}")
     git_clone_cmd = f"sudo git clone {repo_url} -b {branch}"
     node.exec_command(cmd=f"cd {path_to_clone} ; {git_clone_cmd}")
@@ -1831,7 +1831,7 @@ def calculate_available_storage(node):
 
 def perform_env_setup(config, node, ceph_cluster):
     config["git-url"] = config.get(
-        "git-url", "https://github.com/red-hat-storage/ceph-qe-scripts.git"
+        "git-url", "https://github.com/ckulal/ceph-qe-scripts.git"
     )
     config["test_folder"] = config.get("test_folder", "rgw-tests")
     test_folder_path = f"~/{config['test_folder']}"
