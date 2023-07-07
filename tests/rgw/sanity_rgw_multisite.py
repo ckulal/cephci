@@ -85,9 +85,11 @@ def run(**kw):
     test_site_node = test_site.get_ceph_object("rgw").node
     test_client_node = test_site.get_ceph_object("client").node
     config["git-url"] = config.get(
-        "git-url", "https://github.com/red-hat-storage/ceph-qe-scripts.git"
+        "git-url", "https://github.com/ckulal/ceph-qe-scripts.git"
     )
-
+    config["branch"] = config.get(
+        "branch", "ckulal-test"
+    )
     set_env = config.get("set-env", False)
     extra_pkgs = config.get("extra-pkgs")
     install_start_kafka_broker = config.get("install_start_kafka")
