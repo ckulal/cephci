@@ -6,11 +6,13 @@ It installs all the pre-requisites on client nodes
 """
 import argparse
 import datetime
+import itertools
 import json
 import os
 import random
 import re
 import string
+import time
 from time import sleep
 
 from ceph.ceph import CommandFailed
@@ -19,6 +21,28 @@ from utility.log import Log
 from utility.retry import retry
 
 log = Log(__name__)
+
+
+def function_execution_time(func):
+    """
+    This decorator can be used on any function to collect time take for completion of the function
+    """
+
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        with open(
+            f"{log.logger.handlers[0].baseFilename}_execution_times.txt", "a"
+        ) as file:
+            file.write(
+                f"Execution time for {func.__name__} and arrguments - {args} - {kwargs} : {execution_time} seconds\n"
+            )
+        log.info(f"Execution time for {func.__name__}: {execution_time} seconds")
+        return result
+
+    return wrapper
 
 
 class FsUtils(object):
@@ -70,7 +94,7 @@ class FsUtils(object):
             cmd = "yum install -y --nogpgcheck " + " ".join(pkgs)
             client.node.exec_command(sudo=True, cmd=cmd, long_running=True)
             client.node.exec_command(
-                sudo=True, cmd="pip3 install xattr", long_running=True
+                sudo=True, cmd="pip3 install xattr numpy scipy", long_running=True
             )
             out, rc = client.node.exec_command(sudo=True, cmd="ls /home/cephuser")
             if "smallfile" not in out:
@@ -219,7 +243,7 @@ class FsUtils(object):
     def deamon_name(node, service):
         out, rc = node.exec_command(
             sudo=True,
-            cmd=f"systemctl list-units --type=service | grep {service}.ceph | awk {{'print $1'}}",
+            cmd=f"systemctl list-units --type=service | grep {service} | awk {{'print $1'}}",
         )
         service_deamon = out.strip()
         return service_deamon
@@ -592,6 +616,7 @@ class FsUtils(object):
                 )
         return 0
 
+    @retry(CommandFailed, tries=3, delay=60)
     def fuse_mount(self, fuse_clients, mount_point, **kwargs):
         """
         Mounts the drive using Fuse mount
@@ -881,6 +906,8 @@ class FsUtils(object):
         """
         return [node.ip_address for node in self.ceph_cluster.get_nodes(role="mon")]
 
+    # @staticmethod
+
     @staticmethod
     def client_clean_up(
         *args, fuse_clients=[], kernel_clients=[], mounting_dir="", **kwargs
@@ -967,6 +994,135 @@ class FsUtils(object):
             all_sub_info = json.loads(out)
             subvolumes.extend([i["name"] for i in all_sub_info])
         return subvolumes
+
+    @function_execution_time
+    def create_nfs(self, client, nfs_cluster_name, validate=True, **kwargs):
+        """
+        Create an NFS cluster with the given parameters.
+
+        Args:
+            client (str): The client name or identifier.
+            nfs_cluster_name (str): The name of the NFS cluster.
+            validate (bool): Flag indicating whether to validate the cluster creation.
+            **kwargs: Additional keyword arguments for customization.
+
+        Returns:
+            tuple: A tuple containing the Ceph command output and command return code.
+        """
+        nfs_cmd = f"ceph nfs cluster create {nfs_cluster_name}"
+        if kwargs.get("placement"):
+            nfs_cmd += f" --placement '{kwargs.get('placement')}'"
+
+        cmd_out, cmd_rc = client.exec_command(
+            sudo=True, cmd=nfs_cmd, check_ec=kwargs.get("check_ec", True)
+        )
+        if validate:
+            out, rc = client.exec_command(sudo=True, cmd="ceph nfs cluster ls")
+            nfscluster_ls = out.split("\n")
+            if nfs_cluster_name not in nfscluster_ls:
+                raise CommandFailed(
+                    f"Creation of NFS cluster: {nfs_cluster_name} failed"
+                )
+        return cmd_out, cmd_rc
+
+    @function_execution_time
+    @retry(CommandFailed, tries=5, delay=60)
+    def remove_nfs_cluster(self, client, nfs_cluster_name, validate=True, **kwargs):
+        """
+        Remove an NFS cluster and retry for 5 times with a delay of 60 seconds.
+        Args:
+            client:
+            nfs_cluster_name:
+            validate:
+            **kwargs:
+
+        Returns:
+            cmd_out, cmd_rc
+        """
+
+        rmnfscluster_cmd = f"ceph nfs cluster rm {nfs_cluster_name}"
+        cmd_out, cmd_rc = client.exec_command(
+            sudo=True, cmd=rmnfscluster_cmd, check_ec=kwargs.get("check_ec", True)
+        )
+        if validate:
+            listnfscluster_cmd = "ceph nfs cluster ls"
+            out, rc = client.exec_command(sudo=True, cmd=f"{listnfscluster_cmd}")
+            nfscluster_ls = out.split("\n")
+            if nfs_cluster_name in nfscluster_ls:
+                raise CommandFailed(f"Deletion of nfs cluster : {nfscluster_ls} failed")
+        return cmd_out, cmd_rc
+
+    @function_execution_time
+    def create_nfs_export(
+        self, client, nfs_cluster_name, binding, fs_name, validate=True, **kwargs
+    ):
+        """
+        Create an NFS export for a specific file system within an NFS cluster.
+
+        Args:
+            client (str): The name or identifier of the client.
+            nfs_cluster_name (str): The name of the NFS cluster.
+            binding (str): The binding information for the NFS export.
+            fs_name (str): The name of the file system to be exported.
+            validate (bool): Flag indicating whether to validate the export creation.
+            **kwargs: Additional keyword arguments for customization.
+
+        Returns:
+            tuple: A tuple containing the output of the command and the command's return code.
+        """
+        export_nfs_cmd = (
+            f"ceph nfs export create cephfs {nfs_cluster_name} {binding} {fs_name}"
+        )
+        if kwargs.get("path"):
+            export_nfs_cmd += f" --path={kwargs.get('path')} "
+        if kwargs.get("readonly"):
+            export_nfs_cmd += " --readonly"
+        cmd_out, cmd_rc = client.exec_command(
+            sudo=True, cmd=export_nfs_cmd, check_ec=kwargs.get("check_ec", True)
+        )
+        if validate:
+            out, rc = client.exec_command(
+                sudo=True, cmd=f"ceph nfs export ls {nfs_cluster_name} --format json"
+            )
+            export_ls = json.loads(out)
+            if binding not in export_ls:
+                raise CommandFailed(
+                    f"Creation of export failed: {export_nfs_cmd} failed"
+                )
+        return cmd_out, cmd_rc
+
+    @function_execution_time
+    def remove_nfs_export(
+        self, client, nfs_cluster_name, binding, validate=True, **kwargs
+    ):
+        """
+        Remove an NFS export from a specific NFS cluster.
+
+        Args:
+            client (str): The name or identifier of the client.
+            nfs_cluster_name (str): The name of the NFS cluster.
+            binding (str): The binding information for the NFS export.
+            validate (bool): Flag indicating whether to validate the export removal.
+            **kwargs: Additional keyword arguments for customization.
+
+        Returns:
+            tuple: A tuple containing the output of the command and the command's return code.
+        """
+        remove_export_nfs_cmd = f"ceph nfs export rm {nfs_cluster_name} {binding}"
+        cmd_out, cmd_rc = client.exec_command(
+            sudo=True, cmd=remove_export_nfs_cmd, check_ec=kwargs.get("check_ec", True)
+        )
+        if validate:
+            out, rc = client.exec_command(
+                sudo=True, cmd=f"ceph nfs export ls {nfs_cluster_name}"
+            )
+            if out:
+                export_ls = out.split("\n")
+                if binding in export_ls:
+                    raise CommandFailed(
+                        f"Removal of export failed: {remove_export_nfs_cmd} failed"
+                    )
+        return cmd_out, cmd_rc
 
     def create_fs(self, client, vol_name, validate=True, **kwargs):
         """
@@ -1727,10 +1883,24 @@ class FsUtils(object):
     def pid_kill(self, node, daemon):
         out, rc = node.exec_command(cmd="pgrep %s " % daemon, container_exec=False)
         out = out.split("\n")
+        log.info(out)
         out.pop()
         for pid in out:
-            node.exec_command(sudo=True, cmd="kill -9 %s" % pid, container_exec=False)
+            node.exec_command(
+                sudo=True, cmd="kill -9 %s" % pid, container_exec=False, check_ec=False
+            )
             sleep(10)
+        out_2, rc = node.exec_command(
+            cmd="pgrep %s " % daemon, container_exec=False, check_ec=False
+        )
+        if rc:
+            return 0
+        out_2 = out_2.split("\n")
+        out_2.pop()
+        if out == out_2:
+            raise CommandFailed(
+                f"PID Kill Operation Failed pid Before : {out}, PID After : {out_2}"
+            )
         return 0
 
     def network_disconnect(self, ceph_object, sleep_time=20):
@@ -2696,3 +2866,65 @@ os.system('sudo systemctl start  network')
 
         # Setup Crefi pre-requisites : pyxattr
         node.exec_command(sudo=True, cmd="pip3 install pyxattr", long_running=True)
+
+    def generate_all_combinations(
+        self, client, ioengine, mount_dir, workloads, sizes, iodepth_values, numjobs
+    ):
+        """
+        Generates all the combimations of workloads sizes, iodepth as per the fio_config
+        Sample fio_config:
+        fio_config:
+          global_params:
+            ioengine: libaio
+            direct: "1"
+            size: ["1G"]
+            time_based: ""
+            runtime: "60"
+          workload_params:
+            random_rw:
+              rw: ["read","write"]
+              rwmixread: "70"
+              bs: 8k
+              numjobs: "4"
+              iodepth: ["4","8","16","32"]
+        """
+
+        def generate_fio_config(ioengine, mount_dir, workload, size, iodepth, numjobs):
+            fio_config = f"""
+        [global]
+        ioengine={ioengine}
+        direct=1
+        time_based
+        runtime=60
+        size={size}
+        [{workload}]
+        rw={workload}
+        directory={mount_dir}
+        bs= 4k
+        numjobs={int(numjobs)}
+        iodepth= {iodepth}
+        """
+            return fio_config
+
+        fio_configs = []
+        fio_filenames = []
+        for combo in itertools.product(workloads, sizes, iodepth_values):
+            workload, size, iodepth = combo
+            filename = f"file_{workload}_{size}_{iodepth}.fio"
+            fio_configs.append(
+                (
+                    filename,
+                    generate_fio_config(
+                        ioengine, mount_dir, workload, size, iodepth, numjobs=numjobs
+                    ),
+                )
+            )
+        for filename, config in fio_configs:
+            remote_file = client.remote_file(
+                sudo=True, file_name=filename, file_mode="w"
+            )
+            remote_file.write(config)
+            remote_file.flush()
+            fio_filenames.append(filename)
+        log.info("Generated all the configs")
+        return fio_filenames
