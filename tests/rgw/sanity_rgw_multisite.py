@@ -85,6 +85,12 @@ def run(**kw):
     log.info("Running test")
     clusters = kw.get("ceph_cluster_dict")
     config = kw.get("config")
+    config["git-url"] = config.get(
+        "git-url", "https://github.com/ckulal/ceph-qe-scripts.git"
+    )
+    config["branch"] = config.get(
+        "branch", "ckulal_new"
+    )
     test_site = kw.get("ceph_cluster")
     log.info(f"test site: {test_site.name}")
     test_site_node = test_site.get_ceph_object("rgw").node
