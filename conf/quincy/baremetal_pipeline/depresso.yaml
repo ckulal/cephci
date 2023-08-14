@@ -1,0 +1,58 @@
+---
+globals:
+  - ceph-cluster:
+      name: ceph
+      networks:
+        public: 10.1.172.0/23
+          -
+      nodes:
+        - hostname: depressa008
+          ip: 10.1.172.208
+          role:
+            - _admin
+            - installer
+            - mon
+            - mgr
+          root_password: passwd
+        - hostname: depressa009
+          ip: 10.1.172.209
+          role:
+            - mon
+            - mgr
+            - osd
+          root_password: passwd
+          volumes:
+            - /dev/sdb
+            - /dev/sdc
+            - /dev/sdd
+        - hostname: depressa010
+          ip: 10.1.172.210
+          role:
+            - mon
+            - mgr
+            - osd
+            - rgw
+          root_password: passwd
+          volumes:
+            - /dev/sdb
+            - /dev/sdc
+            - /dev/sdd
+        - hostname: depressa011
+          ip: 10.1.172.211
+          role:
+            - osd
+            - rgw
+          root_password: passwd
+          volumes:
+            - /dev/sdb
+            - /dev/sdc
+            - /dev/sdd
+        - hostname: depressa012
+          ip: 10.1.172.212
+          role:
+            - osd
+          root_password: passwd
+          volumes:
+            - /dev/sdb
+            - /dev/sdc
+            - /dev/sdd
