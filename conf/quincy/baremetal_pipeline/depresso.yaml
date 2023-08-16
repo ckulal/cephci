@@ -22,9 +22,9 @@ globals:
             - osd
           root_password: passwd
           volumes:
+            - /dev/sda
             - /dev/sdb
             - /dev/sdc
-            - /dev/sdd
         - hostname: depressa010
           ip: 10.1.172.210
           role:
