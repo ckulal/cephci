@@ -7,6 +7,7 @@ globals:
           -
       nodes:
         - hostname: depressa008
+          id: node1
           ip: 10.1.172.208
           role:
             - _admin
@@ -15,6 +16,7 @@ globals:
             - mgr
           root_password: passwd
         - hostname: depressa009
+          id: node2
           ip: 10.1.172.209
           role:
             - mon
@@ -26,6 +28,7 @@ globals:
             - /dev/sdb
             - /dev/sdc
         - hostname: depressa010
+          id: node3
           ip: 10.1.172.210
           role:
             - mon
@@ -38,6 +41,7 @@ globals:
             - /dev/sdc
             - /dev/sdd
         - hostname: depressa011
+          id: node4
           ip: 10.1.172.211
           role:
             - osd
@@ -48,6 +52,7 @@ globals:
             - /dev/sdc
             - /dev/sdd
         - hostname: depressa012
+          id: node5
           ip: 10.1.172.212
           role:
             - osd
