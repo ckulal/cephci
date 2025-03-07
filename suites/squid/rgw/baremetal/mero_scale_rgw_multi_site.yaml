@@ -366,3 +366,37 @@ tests:
             module: push_cosbench_workload.py
             name: push cosbench cleanup workload from secondary
             polarion-id: CEPH-83575074
+
+
+  - test:
+      name: Parallel upload of objects
+      desc: Parallel upload of objects
+      module: test_parallel.py
+      parallel:
+        - test:
+            clusters:
+              ceph-pri:
+                config:
+                  controllers:
+                    - mero003
+                  drivers:
+                    - mero003
+                    - mero004
+                  bucket_prefix: reg-cosbench-bkt-reboot-
+                  number_of_buckets: 1
+                  number_of_objects: 1000000
+            desc: upload 1M object to regular bucket
+            module: push_cosbench_workload.py
+            name: upload 1M object to regular bucket
+            polarion-id: CEPH-83574448
+        - test:
+            abort-on-fail: true
+            clusters:
+              ceph-sec:
+                config:
+                  script-name: test_sync_conistent_with_rgw_node_reboot.py
+                  config-file-name: /test_sync_consistent_with_node_reboot.yaml
+            desc: Test sync consistent post RGW node reboot
+            module: sanity_rgw_multisite.py
+            name: Test sync consistent post RGW node reboot
+            polarion-id: CEPH-83574448
