@@ -120,13 +120,15 @@ def run(**kw):
 
     client_node = cluster.get_nodes(role="client")[0]
 
-    execute_setup(cluster, config)
+    skip_setup = config.get("skip_setup", False)
+    if not skip_setup:
+        execute_setup(cluster, config)
 
     if not host:
         _, secure, _ = get_rgw_frontend(cluster)
 
-    exit_status = execute_s3_tests(client_node, build, secure)
-    execute_teardown(cluster, build)
+    exit_status = execute_s3_tests(client_node, build, config, secure)
+    #execute_teardown(cluster, build)
 
     log.info("Returning status code of %s", exit_status)
     return exit_status
@@ -156,6 +158,7 @@ def execute_setup(cluster: Ceph, config: dict) -> None:
     host = config.get("host")
     port = config.get("port")
 
+
     client_node = cluster.get_nodes(role="client")[0]
     rgw_node = cluster.get_nodes(role="rgw")[0]
 
@@ -176,7 +179,7 @@ def execute_setup(cluster: Ceph, config: dict) -> None:
     add_lc_debug(cluster, build)
 
 
-def execute_s3_tests(node: CephNode, build: str, encryption: bool = False) -> int:
+def execute_s3_tests(node: CephNode, build: str, config: dict, encryption: bool = False) -> int:
     """
     Return the result of S3 test run.
 
@@ -189,25 +192,39 @@ def execute_s3_tests(node: CephNode, build: str, encryption: bool = False) -> in
         1 - Failure
     """
     log.debug("Executing s3-tests")
+    execute_granular = config.get("execute_granular", False)
+    path = config.get("path", "test_s3")
+    path = path + ".py"
     try:
         base_cmd = "cd s3-tests; S3TEST_CONF=config.yaml virtualenv/bin/nosetests -v"
         extra_args = "-a '!fails_on_rgw,!fails_strict_rfc2616,!encryption'"
         tests = "s3tests"
 
         if not build.split(".")[0] >= "7":
+            log.info("AAA")
+            if execute_granular:
+                tests = f"s3tests_boto3/functional/{path}"
+                base_cmd = f"cd s3-tests; S3TEST_CONF=config.yaml virtualenv/bin/tox -- -v"
+            else:
+                tests = "s3tests_boto3" 
             extra_args = "-a '!fails_on_rgw,!fails_strict_rfc2616"
 
             if not encryption:
                 extra_args += ",!encryption"
 
             extra_args += ",!test_of_sts,!s3select,!user-policy,!webidentity_test'"
-            tests = "s3tests_boto3"
+                
 
         else:
-            base_cmd = "cd s3-tests; S3TEST_CONF=config.yaml virtualenv/bin/tox"
+            log.info("BBB")
+            if execute_granular:
+                tests = f"s3tests_boto3/functional/{path}"
+                base_cmd = f"cd s3-tests; S3TEST_CONF=config.yaml virtualenv/bin/tox "
+            else:
+                base_cmd = "cd s3-tests; S3TEST_CONF=config.yaml virtualenv/bin/tox"
+                
+                tests = "s3tests_boto3"
             extra_args = "-- -v -m 'not fails_on_rgw and not fails_strict_rfc2616"
-            tests = "s3tests_boto3"
-
             if not encryption:
                 extra_args += " and not encryption"
             extra_args += " and not user-policy and not webidentity_test'"
@@ -445,7 +462,7 @@ def create_s3_conf(
 
     conf_file = client_node.remote_file(file_name="s3-tests/config.yaml", file_mode="w")
     conf_file.write(_config)
-    conf_file.flush()
+    #conf_file.flush()
 
 
 def add_lc_debug(cluster: Ceph, build: str) -> None:
