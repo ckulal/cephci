@@ -5016,8 +5016,9 @@ EOF"""
 
                 # rgw qe scripts
                 config["git-url"] = (
-                    "https://github.com/red-hat-storage/ceph-qe-scripts.git"
+                    "https://github.com/ckulal/ceph-qe-scripts.git"
                 )
+                config["branch"] = config.get("branch", "fix_versionid_ibmc")
                 home_dir_path = "/home/cephuser"
                 test_folder = "rgw-ms-tests"
                 test_folder_path = f"{home_dir_path}/{test_folder}"

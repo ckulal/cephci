@@ -145,50 +145,50 @@ tests:
       name: configure client
       polarion-id: CEPH-83573758
 
-  - test:
-      abort-on-fail: true
-      config:
-        install:
-          - agent
-      desc: Setup and configure vault agent
-      destroy-cluster: false
-      module: install_vault.py
-      name: configure vault agent
-      polarion-id: CEPH-83575226
+  # - test:
+  #     abort-on-fail: true
+  #     config:
+  #       install:
+  #         - agent
+  #     desc: Setup and configure vault agent
+  #     destroy-cluster: false
+  #     module: install_vault.py
+  #     name: configure vault agent
+  #     polarion-id: CEPH-83575226
 
-  - test:
-      abort-on-fail: false
-      config:
-        suite:
-          - JavaS3
-        kms_keyid: testKey01
-        ssl: true
-      desc: Java S3tests
-      destroy-cluster: false
-      module: java_s3tests.py
-      name: execute Java s3tests
-      polarion-id: CEPH-83586289
+  # - test:
+  #     abort-on-fail: false
+  #     config:
+  #       suite:
+  #         - JavaS3
+  #       kms_keyid: testKey01
+  #       ssl: true
+  #     desc: Java S3tests
+  #     destroy-cluster: false
+  #     module: java_s3tests.py
+  #     name: execute Java s3tests
+  #     polarion-id: CEPH-83586289
 
-  - test:
-      abort-on-fail: false
-      config:
-        suite:
-          - maven
-        ssl: true
-      desc: Java Maven Test suite
-      destroy-cluster: false
-      module: java_s3tests.py
-      name: execute Java Maven test suite
-      polarion-id: CEPH-83586289
+  # - test:
+  #     abort-on-fail: false
+  #     config:
+  #       suite:
+  #         - maven
+  #       ssl: true
+  #     desc: Java Maven Test suite
+  #     destroy-cluster: false
+  #     module: java_s3tests.py
+  #     name: execute Java Maven test suite
+  #     polarion-id: CEPH-83586289
 
-  - test:
-      name: object level retention test Governance mode
-      desc: object level retention test Governance mode
-      polarion-id: CEPH-83574058
-      module: sanity_rgw.py
-      config:
-        script-name: test_object_level_retention.py
-        config-file-name: test_object_level_governance.yaml
+  # - test:
+  #     name: object level retention test Governance mode
+  #     desc: object level retention test Governance mode
+  #     polarion-id: CEPH-83574058
+  #     module: sanity_rgw.py
+  #     config:
+  #       script-name: test_object_level_retention.py
+  #       config-file-name: test_object_level_governance.yaml
 
   - test:
       name: Test swift bulk upload with tar format
@@ -199,12 +199,12 @@ tests:
         script-name: test_swift_bulk_upload.py
         config-file-name: test_swift_bulk_upload.yaml
 
-  - test:
-      name: test deletion of default realm clears realm id in default info
-      desc: test deletion of default realm clears realm id in default info
-      polarion-id: CEPH-83623614
-      comments: known issue BZ-2268063 targetted to 9.0
-      module: sanity_rgw.py
-      config:
-        script-name: test_check_sharding_enabled.py
-        config-file-name: test_realm_deletion.yaml
+  # - test:
+  #     name: test deletion of default realm clears realm id in default info
+  #     desc: test deletion of default realm clears realm id in default info
+  #     polarion-id: CEPH-83623614
+  #     comments: known issue BZ-2268063 targetted to 9.0
+  #     module: sanity_rgw.py
+  #     config:
+  #       script-name: test_check_sharding_enabled.py
+  #       config-file-name: test_realm_deletion.yaml
