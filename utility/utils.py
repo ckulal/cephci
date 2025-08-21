@@ -2138,8 +2138,9 @@ def get_utilized_space(node, pool_name=None):
 
 def perform_env_setup(config, node, ceph_cluster):
     config["git-url"] = config.get(
-        "git-url", "https://github.com/red-hat-storage/ceph-qe-scripts.git"
+        "git-url", "https://github.com/ckulal/ceph-qe-scripts.git"
     )
+    config["branch"] = config.get("branch", "gc_enhancement")
     config["test_folder"] = config.get("test_folder", "rgw-tests")
     test_folder_path = f"~/{config['test_folder']}"
     pip_cmd = "venv/bin/pip"
