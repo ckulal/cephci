@@ -276,17 +276,6 @@ tests:
         script-name: test_dynamic_bucket_resharding.py
         config-file-name: test_dbr_high_default_limit.yaml
         timeout: 6000
-
-  - test:
-      name: Bucket setlifeycle with invalid date in LC conf
-      desc: Setlifeycle to bucket with invalid date format in Lifecycle configuration
-      polarion-id: CEPH-11186
-      module: sanity_rgw.py
-      config:
-        run-on-rgw: true
-        script-name: test_bucket_lifecycle_object_expiration_transition.py
-        config-file-name: test_lc_invalid_date.yaml
-
   - test:
       name: Control functionality for RGW lifecycle
       desc: Control functionality for RGW lifecycle with rgw_enable_lc_threads
@@ -296,6 +285,15 @@ tests:
         run-on-rgw: true
         script-name: test_bucket_lifecycle_object_expiration_transition.py
         config-file-name: test_rgw_enable_lc_threads.yaml
+  - test:
+      name: Bucket setlifeycle with invalid date in LC conf
+      desc: Setlifeycle to bucket with invalid date format in Lifecycle configuration
+      polarion-id: CEPH-11186
+      module: sanity_rgw.py
+      config:
+        run-on-rgw: true
+        script-name: test_bucket_lifecycle_object_expiration_transition.py
+        config-file-name: test_lc_invalid_date.yaml
 
   - test:
       name: LC enabled on bucket removes pre and post uploaded objects
