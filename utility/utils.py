@@ -2201,7 +2201,7 @@ def clone_the_repo(config, node, path_to_clone):
           node and clone the repo in it.
     """
     log.info("cloning the repo")
-    branch = config.get("branch", "master")
+    branch = config.get("branch", "tfa_d3n")
     log.info(f"branch: {branch}")
     repo_url = config.get("git-url")
     log.info(f"repo_url: {repo_url}")
@@ -2313,7 +2313,10 @@ def get_utilized_space(node, pool_name=None):
 
 def perform_env_setup(config, node, ceph_cluster):
     config["git-url"] = config.get(
-        "git-url", "https://github.com/red-hat-storage/ceph-qe-scripts.git"
+        "git-url", "https://github.com/ckulal/ceph-qe-scripts.git"
+    )
+    config["branch"] = config.get(
+        "branch", "tfa_d3n"
     )
     config["test_folder"] = config.get("test_folder", "rgw-tests")
     test_folder_path = f"~/{config['test_folder']}"
