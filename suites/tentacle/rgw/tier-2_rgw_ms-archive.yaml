@@ -381,8 +381,8 @@ tests:
       clusters:
         ceph-arc:
           config:
-            script-name: test_archive_bucket_stats.py‎
-            config-file-name: test_archive_deleted_bucket_stats.yaml‎
+            script-name: test_archive_bucket_stats.py
+            config-file-name: test_archive_deleted_bucket_stats.yaml
   # - test:
   #     clusters:
   #       ceph-pri:
